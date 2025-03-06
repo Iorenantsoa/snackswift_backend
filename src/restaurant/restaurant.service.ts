@@ -20,32 +20,53 @@ export class RestaurantService {
 
     ) { }
 
+     
     async createRestaurant(newRestaurant: NewRestaurantDto): Promise<ResponseRestaurantDto> {
+        const session = await this.connection.startSession(); // Démarrer une session pour garantir l'atomicité
+        session.startTransaction();
+    
         try {
-            const userFound = await this.userModel.findOne({ email: newRestaurant.owner });
-
+            // Vérifier si le propriétaire existe
+            const userFound = await this.userModel.findOne({ email: newRestaurant.owner }).session(session);
+    
             if (!userFound) {
+                await session.abortTransaction();
+                session.endSession();
                 return {
                     success: false,
                     message: "Le propriétaire n'existe pas.",
                     restaurant: null,
                 };
             }
-
+    
+            // Créer le restaurant
             const restaurant = new this.restaurantModel({
                 ...newRestaurant,
                 owner: userFound._id,
             });
-
-            await restaurant.save();
-
+    
+            await restaurant.save({ session }); // Sauvegarder le restaurant avec la session
+    
+            // Ajouter l'ID du restaurant dans `myRestaurants` de l'utilisateur
+            await this.userModel.findByIdAndUpdate(userFound._id, {
+                $push: { myRestaurants: restaurant._id },
+            }, { session });
+    
+            // Valider la transaction
+            await session.commitTransaction();
+            session.endSession();
+    
             return {
                 success: true,
-                message: "Restaurant ajouté avec succès.",
+                message: "Restaurant ajouté avec succès et lié au propriétaire.",
                 restaurant: restaurant,
             };
-
+    
         } catch (error) {
+            await session.abortTransaction();
+            session.endSession();
+            console.error(error);
+    
             return {
                 success: false,
                 message: "Une erreur s'est produite.",
@@ -53,7 +74,7 @@ export class RestaurantService {
             };
         }
     }
-
+    
 
 
     async getRestaurant(): Promise<ResponseRestaurantDto> {
@@ -101,65 +122,51 @@ export class RestaurantService {
     }
 
     async deleteRestaurant(id: any): Promise<ResponseRestaurantDto> {
+        const session = await this.connection.startSession();
+        session.startTransaction();
+    
         try {
-            const restaurantFound = await this.restaurantModel.findById(id)
+            const restaurantFound = await this.restaurantModel.findById(id).session(session);
             if (!restaurantFound) {
+                await session.abortTransaction();
                 return {
                     success: false,
                     message: "Restaurant non trouvé.",
                     restaurant: null
-                }
-            } else {
-                const restaurant = await this.restaurantModel.findByIdAndDelete(id)
-                return {
-                    success: true,
-                    message: "Restaurant supprimé avec succès.",
-                    restaurant: restaurant
-                }
+                };
             }
+    
+            // Supprimer l'ID du restaurant dans `myRestaurants` du propriétaire
+            if (restaurantFound.owner) {
+                await this.userModel.findByIdAndUpdate(restaurantFound.owner, {
+                    $pull: { myRestaurants: restaurantFound._id }
+                }, { session });
+            }
+    
+            // Supprimer le restaurant
+            const deletedRestaurant = await this.restaurantModel.findByIdAndDelete(id, { session });
+    
+            await session.commitTransaction();
+            session.endSession();
+    
+            return {
+                success: true,
+                message: "Restaurant supprimé avec succès.",
+                restaurant: deletedRestaurant
+            };
+    
         } catch (error) {
+            await session.abortTransaction();
+            session.endSession();
             return {
                 success: false,
                 message: "Une erreur s'est produite.",
                 restaurant: null
-            }
+            };
         }
     }
-    // async updateRestaurant(id: any, newRestaurant: NewRestaurantDto): Promise<ResponseRestaurantDto> {
-    //     try {
-    //         const restaurantFound = await this.restaurantModel.findById(id)
-    //         if (!restaurantFound) {
-    //             return {
-    //                 success: false,
-    //                 message: "Restaurant non trouvé.",
-    //                 restaurant: null
-    //             }
-    //         } else {
-    //             const userFound = await this.userModel.findOne({ email: newRestaurant.owner });
-
-    //             if (!userFound) {
-    //                 return {
-    //                     success: false,
-    //                     message: "Le propriétaire n'existe pas.",
-    //                     restaurant: null,
-    //                 };
-    //             } else {
-    //                 const restaurant = await this.restaurantModel.findByIdAndUpdate(id, newRestaurant)
-    //                 return {
-    //                     success: true,
-    //                     message: "Restaurant modifié avec succès.",
-    //                     restaurant: restaurant
-    //                 }
-    //             } 
-    //         }
-    //     } catch (error) {
-    //         return {
-    //             success: false,
-    //             message: "Une erreur s'est produite.",
-    //             restaurant: null
-    //         }
-    //     }
-    // }
+    
+     
     async updateRestaurant(id: any, newRestaurant: NewRestaurantDto): Promise<ResponseRestaurantDto> {
         try {
             const restaurantFound = await this.restaurantModel.findById(id);

@@ -1,9 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put,  UseGuards } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { NewRestaurantDto } from './dto/new-restaurant.dto';
 import { ResponseRestaurantDto } from './dto/response-restaurant.dto';
+import { JwtAuthGuard } from 'src/user/guard/jwt-aut.guard';  
+import { RolesGuard } from 'guards/roles.guard';
+// import { Roles } from 'decorators/roles.decorator';
 
 @Controller('restaurant')
+@UseGuards(JwtAuthGuard)
 export class RestaurantController {
 
 
@@ -19,8 +23,11 @@ export class RestaurantController {
     }
 
 
-    @Get('/get-all-restaurants')
-    async getRestaurant() : Promise<ResponseRestaurantDto>{
+    // @Roles('restaurant' , 'admin') 
+    // @Get('/get-all-restaurants')
+    @UseGuards(RolesGuard)
+    async getRestaurant( 
+    ) : Promise<ResponseRestaurantDto>{ 
         return this.restaurantService.getRestaurant()
     }
     @Get('/get-restaurant/:id')

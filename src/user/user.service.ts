@@ -72,7 +72,7 @@ export class UserService {
                         access_token: null
                     }
                 }else{
-                    const payload = {id : user._id , name : user.name , email : user.email}
+                    const payload = {id : user._id , name : user.name , email : user.email , role : user.role}
 
                     return  {
                         success: false,
