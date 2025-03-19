@@ -15,7 +15,10 @@ export class MenuItem {
   price: number;
 
   @Prop()
-  imageUrl: string;
+  imageUrl: string; 
+
+  @Prop({ required: true })
+  disponibility: boolean;
 
   @Prop({ type: Types.ObjectId, ref: 'Category' })
   category: Types.ObjectId;

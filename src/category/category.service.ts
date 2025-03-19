@@ -81,6 +81,28 @@ export class CategoryService {
             }
         }
     }
+    async getMenuItemsByCategory(id: any): Promise<any> {
+        try {
+            const category = await this.categoryModel.findById(id).populate({
+                path: 'menuitems',
+                model: 'MenuItem'
+            });
+
+            console.log(category)
+            return {
+                success: true,
+                message: "Menu trouvé.",
+                menuItems: category.menuitems
+            }
+
+        } catch (error) {
+            return {
+                success: false,
+                message: "Une erreur s'est produite.",
+                menuItems: null
+            }
+        }
+    }
 
     async deleteCategory(id: any): Promise<ResponseCategoryDto> {
         try {
@@ -108,7 +130,7 @@ export class CategoryService {
         }
     }
 
-    async updateCategory(id : any , newCategory : NewCategoryDto) : Promise<ResponseCategoryDto>{
+    async updateCategory(id: any, newCategory: NewCategoryDto): Promise<ResponseCategoryDto> {
         try {
             const categoryFound = await this.categoryModel.findById(id)
             if (!categoryFound) {
@@ -118,7 +140,7 @@ export class CategoryService {
                     category: null
                 }
             } else {
-                const category = await this.categoryModel.findByIdAndUpdate(id , newCategory)
+                const category = await this.categoryModel.findByIdAndUpdate(id, newCategory)
                 return {
                     success: true,
                     message: "Catégorie modifiée avec succès.",

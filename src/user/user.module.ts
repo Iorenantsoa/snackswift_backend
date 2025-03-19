@@ -4,8 +4,8 @@ import { UserService } from './user.service';
 import { User, UserSchema } from './schema/user.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
-import * as dotenv from 'dotenv'  
+import { JwtModule } from '@nestjs/jwt'; 
+import * as dotenv from 'dotenv'
 import { JwtStrategy } from './strategy/jwt.strategie';
 
 
@@ -21,6 +21,7 @@ dotenv.config()
     }),
   ],
   controllers: [UserController],
-  providers: [UserService , JwtStrategy], 
+  providers: [UserService, JwtStrategy],
+  exports: [MongooseModule],
 })
 export class UserModule { }

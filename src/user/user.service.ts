@@ -18,7 +18,7 @@ export class UserService {
         private jwtService: JwtService
     ) { }
 
- 
+
     async userRegister(newUser: NewUserDto): Promise<ResponseRegisterUser> {
         try {
             const checkuser = await this.userModel.find({ email: newUser.email })
@@ -51,7 +51,7 @@ export class UserService {
         }
     }
 
-    async login(credential: CredentialDto) : Promise<ResponseLoginDto> {
+    async login(credential: CredentialDto): Promise<ResponseLoginDto> {
 
         try {
             const user = await this.userModel.findOne({ email: credential.email })
@@ -62,25 +62,25 @@ export class UserService {
                     message: "L'email n'existe pas.",
                     access_token: null
                 }
-            }else{ 
-                const matchPassword = await bcrypt.compare(credential.password , user.password)
+            } else {
+                const matchPassword = await bcrypt.compare(credential.password, user.password)
 
-                if(!matchPassword){
+                if (!matchPassword) {
                     return {
                         success: false,
                         message: "Le mot de passe est incorrecte.",
                         access_token: null
                     }
-                }else{
-                    const payload = {id : user._id , name : user.name , email : user.email , role : user.role}
+                } else {
+                    const payload = { id: user._id, name: user.name, email: user.email, role: user.role }
 
-                    return  {
+                    return {
                         success: false,
                         message: "Bienvenue dans SnackSwift.",
-                        access_token : this.jwtService.sign(payload)
+                        access_token: this.jwtService.sign(payload)
                     }
                 }
-                
+
             }
         } catch (error) {
             return {
@@ -95,6 +95,39 @@ export class UserService {
 
     }
 
+
+    async modificationRole(userId: any, newRole: string): Promise<ResponseRegisterUser> {
+        try {
+            const user = await this.userModel.findByIdAndUpdate(userId, { role: newRole }, { new: true })
+
+            if (!user) {
+                return {
+                    success: false,
+                    message: "Utilisateur non trouvé",
+                    user: null
+                }
+            }
+            return {
+                success: true,
+                message: "Inscription effectuée avec succès.",
+                user: user
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message || "Une erreur s'est produite.",
+                user: null
+            }
+        }
+    }
+    async getUser(): Promise<ResponseRegisterUser> {
+        const user = await this.userModel.find()
+        return {
+            success: true,
+            message: "Users récupérés.",
+            user : user
+        }
+    }
 
 
 }

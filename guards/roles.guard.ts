@@ -6,8 +6,7 @@ export class RolesGuard extends JwtAuthGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest();
         const user = request.user.user; // L'utilisateur est attaché à la requête après l'authentification JWT
-
-        console.log(user)
+ 
         // Récupère les rôles autorisés
         const roles = this.getRoles(context);
 

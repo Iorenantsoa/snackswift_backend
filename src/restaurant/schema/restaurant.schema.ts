@@ -11,9 +11,9 @@ export class Restaurant {
   @Prop({ required: true })
   address: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true }) 
   phone: string;
-
+ 
   @Prop() 
   logoUrl: string;
   
