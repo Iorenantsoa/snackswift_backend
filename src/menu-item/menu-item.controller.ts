@@ -17,7 +17,7 @@ export class MenuItemController {
     ) { }
 
     @Post('/create-menuItem')
-    @Roles('admin','restaurant')
+    @Roles('admin', 'restaurant')
     @UseGuards(RolesGuard)
     async createMenuItem(
         @Body() newMenuItem: NewMenuItemDto,
@@ -52,7 +52,7 @@ export class MenuItemController {
     }
     @Delete('/delete-menuItem/:id')
     @Roles('restaurant', 'admin')
-    @UseGuards(RolesGuard) 
+    @UseGuards(RolesGuard)
     async deleteMenuItem(
         @Param('id') id: string
     ): Promise<ResponseMenuItemDto> {
@@ -63,14 +63,32 @@ export class MenuItemController {
     @Roles('restaurant', 'admin')
     @UseGuards(RolesGuard)
     async toggleDisponibility(
-        @Param('id') id: string , 
+        @Param('id') id: string,
         @User() user: any
     ) {
-        const userId = user.user.myRestaurants[0] 
-        // console.log("controller"+userId)
-        return this.menuItemService.toggleDisponibility(id  , userId);
+        const userId = user.user.myRestaurants[0]
+        return this.menuItemService.toggleDisponibility(id, userId);
     }
 
+    @Patch('/toggle-to-favorite/:menuItemId')
+    @Roles('restaurant', 'admin', 'client', 'livreur')
+    @UseGuards(RolesGuard)
+    async toggleToFavorite(
+        @Param('menuItemId') id: string,
+        @User() user: any
+    ) {
+        const userId = user.user._id
+        return this.menuItemService.toggleToFavorite(id, userId);
+    }
 
+    @Get('/favorite-menu-items')
+    @Roles('restaurant', 'admin', 'client', 'livreur')
+    @UseGuards(RolesGuard)
 
+    async getFavoriteMenuItems(
+        @User() user: any
+    ) {
+        const userId = user.user._id
+        return this.menuItemService.getFavoriteMenuItems(userId);
+    }
 }

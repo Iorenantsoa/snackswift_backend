@@ -13,3 +13,4 @@ export class Favorite {
 }
 
 export const FavoriteSchema = SchemaFactory.createForClass(Favorite);
+ 

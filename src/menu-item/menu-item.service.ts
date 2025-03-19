@@ -357,4 +357,101 @@ export class MenuItemService {
         }
 
     }
+
+
+    async toggleToFavorite(menuItemId: any, userId: any): Promise<ResponseMenuItemDto> {
+        try {
+            const menuItem = await this.menuItemModel.findById(menuItemId);
+
+            if (!menuItem) {
+                return {
+                    success: false,
+                    message: "Element non trouvé",
+                    menuItem: null,
+                };
+            }
+
+            const user = await this.userModel.findById(userId);
+
+            if (!user) {
+                return {
+                    success: false,
+                    message: "Utilisateur n'existe pas",
+                    menuItem: null,
+                };
+            }
+
+            const menuItemFound = user.myFavoriteMenuItem.find(menuItemIdFound =>
+                menuItemIdFound.equals(menuItemId)
+            );
+
+
+            if (menuItemFound) {
+                await this.userModel.findByIdAndUpdate(userId, {
+                    $pull: { myFavoriteMenuItem: menuItemId }
+                });
+                return {
+                    success: true,
+                    message: "Element enlevé des favoris",
+                    menuItem: menuItem,
+                };
+            } else {
+                await this.userModel.findByIdAndUpdate(userId, {
+                    $push: { myFavoriteMenuItem: menuItemId }
+                });
+                return {
+                    success: true,
+                    message: "Element ajouté aux favoris",
+                    menuItem: menuItem,
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+                menuItem: null,
+            };
+        }
+    }
+
+    // async getMyFavoriteMenuItems(userId: any): Promise<ResponseMenuItemDto> {
+    //     try {
+    //         const user = await this.userModel.findById(userId).populate('myFavoriteMenuItem')
+    //         console.log(user)
+    //     } catch (error) {
+    //         return {
+    //             success: false,
+    //             message: error.message,
+    //             menuItem: null,
+    //         };
+    //     }
+    // }
+    async getFavoriteMenuItems(userId: any): Promise<ResponseMenuItemDto> {
+        try {
+            const user = await this.userModel.findById(userId).populate('myFavoriteMenuItem');
+
+            console.log(user)
+            if (!user) {
+                return {
+                    success: false,
+                    message: "Utilisateur non trouvé",
+                    menuItem: null,
+                };
+            }
+
+            return {
+                success: true,
+                message: "Favoris récupérés avec succès",
+                menuItem: user.myFavoriteMenuItem, // Retourne les favoris avec leurs détails
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+                menuItem: null,
+            };
+        }
+    }
+
+
 }
